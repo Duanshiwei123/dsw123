@@ -487,16 +487,46 @@ function parseInvoiceText(norm, rawText, ocrData, file, isPDF) {
       }
     }
 
-    // ── 策略3：出租车实拍 —— "日期：YYYY年MM月DD日" + "上车：HH:MM" / "下车：HH:MM"
+    // ── 策略3：出租车实拍 —— 纯数字位置关系法
+    // 思路：出租车票竖向列表，上车/下车时间必定相邻，且都在17:00后
+    // 日期在上车时间前1~5行内，格式 YYYY年MM月DD日 或 YYYY*MM月DD日 等
     if(!date) {
-      const dateM = norm.match(/日期[：:]\s*(\d{4})[年-](\d{1,2})[月-](\d{1,2})/);
-      if(dateM) {
-        date = toDateStr(dateM[1],dateM[2],dateM[3]);
-        const upM   = norm.match(/上车[：:]\s*(\d{1,2}):(\d{2})/);
-        const downM = norm.match(/下车[：:]\s*(\d{1,2}):(\d{2})/);
-        const t1 = upM   ? fmtHM(+upM[1],  +upM[2])   : '';
-        const t2 = downM ? fmtHM(+downM[1],+downM[2]) : '';
-        tripTime = t1 && t2 ? `${t1} ~ ${t2}` : t1||t2;
+      // 找所有仅含 HH:MM 的行（一行只有时间，没有多余数字干扰）
+      const timeOnlyLines = []; // {idx, h, m}
+      srcLines.forEach((line, idx) => {
+        // 清理行：去掉除数字和冒号外的杂质
+        const clean = line.replace(/[^\d:]/g, '');
+        const m = clean.match(/^(\d{1,2}):(\d{2})$/);
+        if(m) {
+          const h = +m[1], mi = +m[2];
+          if(h>=0 && h<=23 && mi>=0 && mi<=59) timeOnlyLines.push({idx, h, mi});
+        }
+      });
+
+      // 找相邻的两个时间行（索引差<=3，第一个>=17:00）
+      for(let i=0; i<timeOnlyLines.length-1; i++) {
+        const t1 = timeOnlyLines[i];
+        const t2 = timeOnlyLines[i+1];
+        if(t2.idx - t1.idx > 3) continue;  // 必须相邻
+        if(t1.h < 17) continue;            // 上车时间>=17:00
+        if(t2.h < t1.h || (t2.h===t1.h && t2.mi <= t1.mi)) continue; // 下车>上车
+
+        // 在前5行内找日期
+        const searchStart = Math.max(0, t1.idx - 5);
+        for(let j = t1.idx - 1; j >= searchStart; j--) {
+          const dline = srcLines[j];
+          // 匹配各种出租车日期格式，允许OCR乱码（用\d{4}.{0,2}\d{1,2}.{0,1}\d{1,2}）
+          const dm = dline.match(/(\d{4}).{0,2}(\d{1,2}).{0,1}(\d{1,2})/);
+          if(dm) {
+            const y=+dm[1], mo=+dm[2], d=+dm[3];
+            if(y>=2020 && y<=2030 && mo>=1 && mo<=12 && d>=1 && d<=31) {
+              date = toDateStr(y, mo, d);
+              tripTime = `${fmtHM(t1.h,t1.mi)} ~ ${fmtHM(t2.h,t2.mi)}`;
+              break;
+            }
+          }
+        }
+        if(date) break;
       }
     }
 
