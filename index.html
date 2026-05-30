@@ -678,14 +678,24 @@ async function parseOvertimeFile(fileItem, progressCb) {
   const records = [];
   const dateRe = /(\d{4})-(\d{1,2})-(\d{1,2})/;
 
-  for(const line of lines) {
+  // 计算每行bbox：如果ocr.space的坐标不可靠，按总行数均分图片高度
+  const totalLines = lines.length || 1;
+  const lineH = imgH / totalLines;
+
+  for(let li=0; li<lines.length; li++) {
+    const line = lines[li];
     const t = normalizeText(line.text||'');
     const dm = t.match(dateRe);
     if(!dm) continue;
     const date = toDateStr(dm[1],dm[2],dm[3]);
     const tms = t.match(/\d{1,2}:\d{2}/g)||[];
+    // bbox: 优先用真实坐标，如果坐标明显不合理(y0=0且不是第一行)则用均分
+    let bbox = line.bbox;
+    if(!bbox || (bbox.y0===0 && bbox.y1<=30 && li>0)) {
+      bbox = { x0: 0, y0: Math.round(li * lineH), x1: imgW, y1: Math.round((li+1) * lineH) };
+    }
     records.push({ date, startTime:tms[0]||'', endTime:tms[1]||'',
-      lineText:t, bbox: line.bbox||{x0:0,y0:0,x1:imgW,y1:imgH} });
+      lineText:t, bbox });
   }
 
   if(records.length===0) {
