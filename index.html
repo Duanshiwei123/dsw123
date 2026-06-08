@@ -561,7 +561,10 @@ async function callOCR(file, type) {
     // 发票：优先用财务票据OCR，失败后用通用高精度OCR兜底
     try {
       const result = await callBaiduOCR(base64, 'multiple_invoice');
-      return { content: JSON.stringify(result), raw: JSON.stringify(result), type: 'financial' };
+      // 从结构化数据中提取文本，用于兜底解析
+      const fields = result.words_result || {};
+      const rawText = Object.entries(fields).map(([k, v]) => `${k}: ${v}`).join('\n');
+      return { content: JSON.stringify(result), raw: rawText, type: 'financial' };
     } catch(e) {
       console.warn('财务票据OCR失败，切换通用OCR:', e.message);
       try {
@@ -653,72 +656,79 @@ function extractEmployeeNameFromText(text) {
 
 // ═══════════════════════════════════════════
 //  解析百度财务票据OCR结果（multiple_invoice）
+//  百度API返回格式：{ "words_result": { "InvoiceType": "...", "InvoiceDate": "...", ... } }
 // ═══════════════════════════════════════════
-function parseBaiduInvoiceResult(ocrResult) {
+function parseBaiduInvoiceResult(ocrResult, rawText) {
   let date='', time='', amount='', origin='', dest='', type='网约车', invoice_no='';
 
   try {
     const data = typeof ocrResult === 'string' ? JSON.parse(ocrResult) : ocrResult;
-    if (!data || !data.words_result) return { date, time, amount, origin, dest, type, invoice_no };
 
-    const results = data.words_result || [];
-    const rawText = data.words_result_num ? '' : (data.words_result || []).map(w => w.words).join('\n');
+    // 检查是否有有效的识别结果
+    if (!data || !data.words_result) {
+      // 如果没有结构化结果，尝试从原始文本解析
+      if (rawText) {
+        return parseInvoiceText(rawText, 'general');
+      }
+      return { date, time, amount, origin, dest, type, invoice_no };
+    }
 
-    // 遍历所有识别结果
-    for (const item of results) {
-      const itemType = item.type || '';
-      const fields = item.fields || {};
+    const fields = data.words_result;
 
-      // 判断发票类型
-      if (/出租/.test(itemType) || /taxi/.test(itemType.toLowerCase())) {
-        type = '出租车';
-      } else if (/网约|online/.test(itemType)) {
-        type = '网约车';
-      } else if (/增值|vat/.test(itemType)) {
-        type = '增值税发票';
+    // 判断发票类型
+    const invType = fields.InvoiceType || '';
+    if (/出租/.test(invType)) type = '出租车';
+    else if (/网约|打车|滴滴|如祺|高德/.test(invType)) type = '网约车';
+    else if (/增值|增值税/.test(invType)) type = '增值税发票';
+    else if (rawText && /出租车|的士/.test(rawText)) type = '出租车';
+    else if (rawText && /滴滴|如祺|高德|T3|曹操/.test(rawText)) type = '网约车';
+
+    // 提取字段 - 百度API返回的字段名
+    if (fields.InvoiceDate) date = normalizeDate(fields.InvoiceDate);
+    if (fields.TotalAmount) amount = String(fields.TotalAmount).replace(/[^\d.]/g, '');
+    if (fields.InvoiceNum) invoice_no = fields.InvoiceNum;
+
+    // 备用金额字段
+    if (!amount && fields.Amount) amount = String(fields.Amount).replace(/[^\d.]/g, '');
+    if (!amount && fields.Fare) amount = String(fields.Fare).replace(/[^\d.]/g, '');
+
+    // 如果有原始文本，尝试从中提取更多信息
+    if (rawText) {
+      // 提取起终点
+      const fromMatch = rawText.match(/(?:起点|出发地|上车点|上车|始发)[：:\s]*([^\n，,]{2,20})/);
+      const toMatch = rawText.match(/(?:终点|目的地|下车点|下车|到达)[：:\s]*([^\n，,]{2,20})/);
+      if (fromMatch && !origin) origin = fromMatch[1].trim();
+      if (toMatch && !dest) dest = toMatch[1].trim();
+
+      // 提取时间
+      if (!time) {
+        const timeMatches = rawText.match(/(\d{1,2}):(\d{2})/g) || [];
+        if (timeMatches.length >= 2) {
+          time = timeMatches[0] + '-' + timeMatches[timeMatches.length-1];
+        } else if (timeMatches.length === 1) {
+          time = timeMatches[0];
+        }
       }
 
-      // 提取字段
-      if (fields.Date) date = normalizeDate(fields.Date);
-      if (fields.Time) time = fields.Time;
-      if (fields.TotalFare) amount = String(fields.TotalFare).replace(/[^\d.]/g, '');
-      if (fields.PickupLocation) origin = fields.PickupLocation;
-      if (fields.DropoffLocation) dest = fields.DropoffLocation;
-      if (fields.InvoiceNum) invoice_no = fields.InvoiceNum;
-
-      // 网约车行程单（items数组）
-      if (fields.items && fields.items.length > 0) {
-        const it = fields.items[0];
-        if (it.pickup_date) date = normalizeDate(it.pickup_date);
-        if (it.pickup_time && it.dropoff_time) time = it.pickup_time + '-' + it.dropoff_time;
-        if (it.fare) amount = String(it.fare).replace(/[^\d.]/g, '');
-        if (it.start_place) origin = it.start_place;
-        if (it.destination_place) dest = it.destination_place;
+      // 如果没提取到日期，尝试从原始文本提取
+      if (!date) {
+        const dm = rawText.match(/(\d{4})[年\-/](\d{1,2})[月\-/](\d{1,2})/);
+        if (dm) date = normalizeDate(`${dm[1]}-${dm[2]}-${dm[3]}`);
       }
-    }
 
-    // 如果没提取到，尝试从原始文本中用正则兜底
-    const allText = results.map(r => {
-      const f = r.fields || {};
-      return Object.values(f).join(' ') + ' ' + (r.words || '');
-    }).join('\n');
-
-    if (!date) {
-      const dm = allText.match(/(\d{4})[年\-/](\d{1,2})[月\-/](\d{1,2})/);
-      if (dm) date = normalizeDate(`${dm[1]}-${dm[2]}-${dm[3]}`);
-    }
-    if (!amount) {
-      const am = allText.match(/[¥￥]\s*(\d+\.?\d*)/) || allText.match(/(?:合计|总计|金额)[：:\s]*([\d.]+)/);
-      if (am) amount = am[1];
-    }
-    if (!time) {
-      const tm = allText.match(/(\d{1,2}:\d{2})/g);
-      if (tm && tm.length >= 2) time = tm[0] + '-' + tm[tm.length-1];
-      else if (tm && tm.length === 1) time = tm[0];
+      // 如果没提取到金额，尝试从原始文本提取
+      if (!amount) {
+        const am = rawText.match(/[¥￥]\s*(\d+\.?\d*)/) || rawText.match(/(?:合计|总计|金额|费用)[：:\s]*([\d.]+)/);
+        if (am) amount = am[1];
+      }
     }
 
   } catch(e) {
     console.error('解析百度发票OCR结果失败:', e);
+    // 失败时使用通用文本解析兜底
+    if (rawText) {
+      return parseInvoiceText(rawText, 'general');
+    }
   }
 
   return { date, time, amount, origin, dest, type, invoice_no };
@@ -727,9 +737,9 @@ function parseBaiduInvoiceResult(ocrResult) {
 // ═══════════════════════════════════════════
 //  解析发票 OCR 结果（主入口，兼容百度返回）
 // ═══════════════════════════════════════════
-function parseInvoiceText(ocrContent, ocrType) {
+function parseInvoiceText(ocrContent, ocrType, rawText) {
   if (ocrType === 'financial') {
-    return parseBaiduInvoiceResult(ocrContent);
+    return parseBaiduInvoiceResult(ocrContent, rawText);
   }
 
   // 通用OCR文本解析（accurate_basic 返回的文本）
@@ -867,7 +877,7 @@ async function startAnalysis() {
       );
       try {
         const ocr = await callOCR(f, 'invoice');
-        const parsed = parseInvoiceText(ocr.content || '', ocr.type);
+        const parsed = parseInvoiceText(ocr.content || '', ocr.type, ocr.raw || '');
         invResults.push({
           fileName: f.name,
           date:     parsed.date    || '',
