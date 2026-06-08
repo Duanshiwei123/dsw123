@@ -6,94 +6,35 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>打车发票 & 加班记录核验系统 v3.0</title>
+  <title>打车发票 & 加班记录核验系统 v4.0</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
-      background: #f0f2f5; color: #333; min-height: 100vh;
-    }
-    .header {
-      background: linear-gradient(135deg, #1a73e8, #0d47a1);
-      color: #fff; padding: 16px 32px;
-      display: flex; align-items: center; gap: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      position: sticky; top: 0; z-index: 100;
-    }
+    body { font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif; background: #f0f2f5; color: #333; min-height: 100vh; }
+    .header { background: linear-gradient(135deg, #1a73e8, #0d47a1); color: #fff; padding: 16px 32px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 100; }
     .header h1 { font-size: 19px; font-weight: 600; }
     .header p { font-size: 12px; opacity: 0.8; margin-top: 2px; }
     .container { max-width: 1300px; margin: 24px auto; padding: 0 20px; }
-
-    /* 区域卡片 */
-    .card {
-      background: #fff; border-radius: 12px; padding: 24px;
-      margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-    }
-    .card-title {
-      font-size: 14px; font-weight: 600; color: #1a73e8;
-      margin-bottom: 16px; padding-bottom: 10px;
-      border-bottom: 2px solid #e8f0fe;
-      display: flex; align-items: center; gap: 7px;
-    }
-    .section-label {
-      display: inline-block; font-size: 11px; background: #e8f0fe;
-      color: #1a73e8; padding: 2px 10px; border-radius: 10px;
-      margin-bottom: 12px; font-weight: 600;
-    }
-
-    /* ===== 区域一：上传区 ===== */
+    .card { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
+    .card-title { font-size: 14px; font-weight: 600; color: #1a73e8; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid #e8f0fe; display: flex; align-items: center; gap: 7px; }
+    .section-label { display: inline-block; font-size: 11px; background: #e8f0fe; color: #1a73e8; padding: 2px 10px; border-radius: 10px; margin-bottom: 12px; font-weight: 600; }
     .upload-row { display: flex; gap: 20px; flex-wrap: wrap; }
-    .upload-box {
-      flex: 1; min-width: 260px;
-      border: 2px dashed #c5d8fc; border-radius: 10px;
-      padding: 18px; background: #f8faff;
-      transition: border-color .2s, background .2s;
-      cursor: pointer; position: relative;
-    }
+    .upload-box { flex: 1; min-width: 260px; border: 2px dashed #c5d8fc; border-radius: 10px; padding: 18px; background: #f8faff; transition: border-color .2s, background .2s; cursor: pointer; position: relative; }
     .upload-box:hover, .upload-box.dragover { border-color: #1a73e8; background: #e8f0fe; }
-    .upload-box input[type=file] {
-      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
-    }
+    .upload-box input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
     .upload-icon { font-size: 30px; text-align: center; margin-bottom: 6px; }
     .upload-box h3 { font-size: 13px; color: #444; margin-bottom: 4px; }
     .upload-box p { font-size: 11px; color: #999; }
-    .tag {
-      display: inline-block; padding: 1px 7px; border-radius: 10px;
-      font-size: 10px; margin-left: 5px; background: #e8f0fe; color: #1a73e8;
-    }
+    .tag { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 10px; margin-left: 5px; background: #e8f0fe; color: #1a73e8; }
     .preview-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
     .preview-item { position: relative; width: 80px; height: 80px; }
-    .preview-item img {
-      width: 100%; height: 100%; object-fit: cover;
-      border-radius: 6px; border: 1px solid #ddd;
-    }
-    .preview-item.pdf-preview {
-      width: 100px; height: 100px;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      background: #e3f2fd; border-radius: 6px; border: 1px solid #90caf9;
-    }
+    .preview-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; }
+    .preview-item.pdf-preview { width: 100px; height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #e3f2fd; border-radius: 6px; border: 1px solid #90caf9; }
     .preview-item.pdf-preview .pdf-icon { font-size: 24px; }
     .preview-item.pdf-preview .pdf-name { font-size: 9px; color: #1565c0; margin-top: 4px; max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .remove-btn {
-      position: absolute; top: -6px; right: -6px;
-      background: #e53935; color: #fff; border: none;
-      border-radius: 50%; width: 18px; height: 18px;
-      font-size: 11px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-    }
-    #otPreviewImg {
-      max-width: 100%; max-height: 160px; margin-top: 8px;
-      border-radius: 6px; border: 1px solid #ddd; display: none;
-    }
-
-    /* 操作栏 */
+    .remove-btn { position: absolute; top: -6px; right: -6px; background: #e53935; color: #fff; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    #otPreviewImg { max-width: 100%; max-height: 160px; margin-top: 8px; border-radius: 6px; border: 1px solid #ddd; display: none; }
     .action-bar { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
-    .btn {
-      padding: 9px 22px; border: none; border-radius: 8px;
-      cursor: pointer; font-size: 13px; font-weight: 600;
-      display: flex; align-items: center; gap: 5px;
-      transition: filter .15s, transform .1s;
-    }
+    .btn { padding: 9px 22px; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 5px; transition: filter .15s, transform .1s; }
     .btn:active { transform: scale(.97); }
     .btn-primary { background: #1a73e8; color: #fff; }
     .btn-primary:hover { filter: brightness(1.1); }
@@ -108,75 +49,31 @@
     .btn-sm { padding: 5px 14px; font-size: 12px; }
     .btn-xs { padding: 3px 10px; font-size: 11px; }
     .btn:disabled { opacity: .4; cursor: not-allowed; }
-    .status-bar {
-      flex: 1; font-size: 12px; color: #666;
-      padding: 6px 12px; background: #f5f5f5; border-radius: 6px;
-      min-width: 200px;
-    }
-
-    /* 进度 */
-    .progress-card {
-      background: #fff; border-radius: 10px; padding: 14px 18px;
-      margin-bottom: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: none;
-    }
+    .status-bar { flex: 1; font-size: 12px; color: #666; padding: 6px 12px; background: #f5f5f5; border-radius: 6px; min-width: 200px; }
+    .progress-card { background: #fff; border-radius: 10px; padding: 14px 18px; margin-bottom: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: none; }
     .progress-card.show { display: block; }
     .progress-label { font-size: 12px; color: #555; margin-bottom: 6px; }
     .progress-wrap { background: #e0e0e0; border-radius: 10px; height: 7px; overflow: hidden; }
-    .progress-fill {
-      height: 100%; background: linear-gradient(90deg,#1a73e8,#34a853);
-      border-radius: 10px; transition: width .4s; width: 0%;
-    }
+    .progress-fill { height: 100%; background: linear-gradient(90deg,#1a73e8,#34a853); border-radius: 10px; transition: width .4s; width: 0%; }
     .step-list { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 8px; }
     .step { font-size: 11px; padding: 2px 9px; border-radius: 12px; background: #eee; color: #666; }
     .step.active { background: #e8f0fe; color: #1a73e8; }
     .step.done { background: #e6f4ea; color: #34a853; }
     .step.err { background: #fce8e6; color: #d32f2f; }
-
-    /* ===== 区域二：汇总表 ===== */
-    .table-title {
-      text-align: center; font-size: 14px; font-weight: bold;
-      color: #0d47a1; margin-bottom: 10px;
-    }
+    .table-title { text-align: center; font-size: 14px; font-weight: bold; color: #0d47a1; margin-bottom: 10px; }
     .table-wrap { overflow-x: auto; }
-    .info-table {
-      width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1000px;
-    }
-    .info-table th {
-      background: #d4e8f9; color: #0d47a1; font-weight: 600;
-      padding: 7px 6px; border: 1px solid #90caf9;
-      text-align: center; white-space: nowrap;
-    }
+    .info-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1000px; }
+    .info-table th { background: #d4e8f9; color: #0d47a1; font-weight: 600; padding: 7px 6px; border: 1px solid #90caf9; text-align: center; white-space: nowrap; }
     .info-table th.yel { background: #fff9c4; color: #5d4037; }
-    .info-table td {
-      padding: 6px 5px; border: 1px solid #ccc;
-      text-align: center; vertical-align: middle; font-size: 12px;
-      position: relative;
-    }
-    .info-table td input {
-      width: 100%; border: 1px solid #e0e0e0; border-radius: 3px;
-      padding: 2px 5px; font-size: 12px; background: transparent;
-    }
+    .info-table td { padding: 6px 5px; border: 1px solid #ccc; text-align: center; vertical-align: middle; font-size: 12px; position: relative; }
+    .info-table td input { width: 100%; border: 1px solid #e0e0e0; border-radius: 3px; padding: 2px 5px; font-size: 12px; background: transparent; }
     .info-table td input:focus { outline: none; border-color: #1a73e8; background: #fff; }
     .info-table tr.new-row { animation: highlightRow 3s ease-out; }
-    @keyframes highlightRow {
-      0% { background: #e8f0fe; }
-      100% { background: transparent; }
-    }
-    .del-row-btn {
-      background: none; border: none; color: #e53935; cursor: pointer;
-      font-size: 14px; padding: 2px 6px; border-radius: 4px;
-    }
+    @keyframes highlightRow { 0% { background: #e8f0fe; } 100% { background: transparent; } }
+    .del-row-btn { background: none; border: none; color: #e53935; cursor: pointer; font-size: 14px; padding: 2px 6px; border-radius: 4px; }
     .del-row-btn:hover { background: #fce8e6; }
-
-    /* ===== 区域三：加班凭证 ===== */
-    .ot-history-tabs {
-      display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center;
-    }
-    .ot-tab {
-      padding: 5px 14px; border-radius: 16px; font-size: 12px;
-      cursor: pointer; border: 1px solid #ddd; background: #f5f5f5;
-      transition: all .15s;
-    }
+    .ot-history-tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+    .ot-tab { padding: 5px 14px; border-radius: 16px; font-size: 12px; cursor: pointer; border: 1px solid #ddd; background: #f5f5f5; transition: all .15s; }
     .ot-tab:hover { border-color: #1a73e8; color: #1a73e8; }
     .ot-tab.active { background: #1a73e8; color: #fff; border-color: #1a73e8; }
     .ot-layout { display: flex; gap: 22px; flex-wrap: wrap; align-items: flex-start; }
@@ -184,72 +81,34 @@
     .ot-img-col h3 { font-size: 12px; color: #666; margin-bottom: 6px; }
     #overtimeCanvas { max-width: 100%; border: 1px solid #ddd; border-radius: 8px; display: block; }
     .ot-tbl-col { flex: 1; min-width: 300px; overflow-x: auto; }
-    .ot-tbl-title {
-      text-align: center; font-size: 13px; font-weight: bold;
-      color: #c62828; margin-bottom: 8px;
-    }
+    .ot-tbl-title { text-align: center; font-size: 13px; font-weight: bold; color: #c62828; margin-bottom: 8px; }
     .ot-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    .ot-table th {
-      background: #ffcdd2; color: #b71c1c; padding: 6px 8px;
-      border: 1px solid #ef9a9a; text-align: center; white-space: nowrap;
-    }
+    .ot-table th { background: #ffcdd2; color: #b71c1c; padding: 6px 8px; border: 1px solid #ef9a9a; text-align: center; white-space: nowrap; }
     .ot-table td { padding: 5px 7px; border: 1px solid #e0e0e0; text-align: center; }
     .ot-table tr:nth-child(even) td { background: #fff5f5; }
-    .badge {
-      display: inline-block; padding: 2px 8px; border-radius: 10px;
-      font-size: 11px; font-weight: 600;
-    }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
     .badge-yes { background: #e6f4ea; color: #34a853; }
     .badge-no { background: #fce8e6; color: #d32f2f; }
-
-    /* OCR 复核面板 */
-    .review-card {
-      background: #fffde7; border-radius: 12px; padding: 22px;
-      margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-      border-left: 4px solid #f9a825;
-    }
+    .review-card { background: #fffde7; border-radius: 12px; padding: 22px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid #f9a825; }
     .review-card .card-title { color: #e65100; border-bottom-color: #ffe082; }
     .review-cols { display: flex; gap: 22px; flex-wrap: wrap; }
     .review-col { flex: 1; min-width: 260px; }
     .review-col h3 { font-size: 12px; color: #666; margin-bottom: 8px; font-weight: 600; }
-    .review-item {
-      background: #fff; border-radius: 7px; padding: 9px 12px;
-      margin-bottom: 8px; border: 1px solid #ffe082; font-size: 12px;
-    }
-    .review-item-head {
-      display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;
-    }
+    .review-item { background: #fff; border-radius: 7px; padding: 9px 12px; margin-bottom: 8px; border: 1px solid #ffe082; font-size: 12px; }
+    .review-item-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
     .review-item-name { font-weight: 600; color: #333; font-size: 12px; }
     .review-fields { color: #555; line-height: 1.85; }
     .review-fields b { color: #1a73e8; }
     .review-fields .warn { color: #e65100; }
-    .raw-btn {
-      font-size: 11px; color: #999; cursor: pointer;
-      text-decoration: underline; margin-top: 4px; display: inline-block;
-    }
-    .raw-text {
-      display: none; margin-top: 5px; padding: 6px 8px;
-      background: #fafafa; border: 1px solid #eee; border-radius: 5px;
-      font-size: 11px; color: #888; white-space: pre-wrap;
-      word-break: break-all; max-height: 100px; overflow-y: auto;
-    }
+    .raw-btn { font-size: 11px; color: #999; cursor: pointer; text-decoration: underline; margin-top: 4px; display: inline-block; }
+    .raw-text { display: none; margin-top: 5px; padding: 6px 8px; background: #fafafa; border: 1px solid #eee; border-radius: 5px; font-size: 11px; color: #888; white-space: pre-wrap; word-break: break-all; max-height: 100px; overflow-y: auto; }
     .date-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
-    .chip {
-      padding: 2px 9px; border-radius: 10px; font-size: 11px; font-weight: 500;
-    }
+    .chip { padding: 2px 9px; border-radius: 10px; font-size: 11px; font-weight: 500; }
     .chip-hit { background: #e6f4ea; color: #2d7d46; border: 1px solid #a8d5b5; }
     .chip-miss { background: #f5f5f5; color: #888; border: 1px solid #ddd; }
-
     .empty-msg { text-align: center; color: #bbb; padding: 28px; font-size: 13px; }
     .export-row { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
-
-    /* 恢复提示 */
-    #restorePrompt {
-      display: none; position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
-      background: #fff; border-radius: 10px; padding: 16px 24px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.15); z-index: 200;
-      align-items: center; gap: 14px; font-size: 13px;
-    }
+    #restorePrompt { display: none; position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: #fff; border-radius: 10px; padding: 16px 24px; box-shadow: 0 4px 24px rgba(0,0,0,0.15); z-index: 200; align-items: center; gap: 14px; font-size: 13px; }
     #restorePrompt.show { display: flex; }
     #restorePrompt .prompt-text { color: #333; }
     #restorePrompt .prompt-actions { display: flex; gap: 8px; }
@@ -260,7 +119,6 @@
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     }
   </script>
-  <script src="https://unpkg.com/tesseract.js@5.0.4/dist/tesseract.min.js"></script>
 </head>
 <body>
 
@@ -274,9 +132,7 @@
 </div>
 
 <div class="header">
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="white">
-    <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
-  </svg>
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
   <div>
     <h1>打车发票 &amp; 加班记录核验系统</h1>
     <p>上传发票 + 加班记录 → 自动匹配日期 → 生成汇总表与加班凭证</p>
@@ -285,7 +141,7 @@
 
 <div class="container">
 
-  <!-- ========== 区域一：上传区 ========== -->
+  <!-- 上传区 -->
   <div class="card" id="uploadCard">
     <div class="card-title">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="#1a73e8"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
@@ -328,7 +184,7 @@
     <div class="step-list" id="stepList"></div>
   </div>
 
-  <!-- ========== 区域二：汇总表 ========== -->
+  <!-- 汇总表 -->
   <div class="card" id="summaryCard">
     <div class="card-title">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="#1a73e8"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 10h2v7H7zm4-3h2v10h-2zm4 6h2v4h-2z"/></svg>
@@ -375,14 +231,13 @@
     </div>
   </div>
 
-  <!-- ========== 区域三：加班凭证 ========== -->
+  <!-- 加班凭证 -->
   <div class="card" id="otCard">
     <div class="card-title">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="#1a73e8"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z"/></svg>
       区域三：加班凭证
       <span style="font-size:11px;font-weight:400;color:#999;margin-left:8px;">（每次分析后刷新为最新数据，可切换查看历史）</span>
     </div>
-    <!-- 历史切换标签 -->
     <div class="ot-history-tabs" id="otHistoryTabs"></div>
     <div class="ot-layout" id="otLayout">
       <div class="ot-img-col">
@@ -436,42 +291,84 @@
 </div><!-- /container -->
 
 <script>
-// ════════════════════════════════════════════
-//  纯前端 OCR 配置
-// ════════════════════════════════════════════
-const OCR_SPACE_KEY = 'K88888888888957';  // 公开免费key
+// ═══════════════════════════════════════════
+//  百度智能云 OCR 配置（纯前端调用）
+// ═══════════════════════════════════════════
+const BAIDU_API_KEY = 'SvxOgu11sRL76eYh5AX0z3rP';
+const BAIDU_SECRET_KEY = 'VlubSseDX9x9uQHDH9mf4Kbn5n4zS772';
+
+let baiduAccessToken = null;
+let baiduTokenExpireTime = 0;
+
+// 获取百度OCR Access Token（自动缓存，过期前5分钟刷新）
+async function getBaiduToken() {
+  const now = Date.now();
+  if (baiduAccessToken && now < baiduTokenExpireTime - 5 * 60 * 1000) {
+    return baiduAccessToken;
+  }
+  const url = `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${encodeURIComponent(BAIDU_API_KEY)}&client_secret=${encodeURIComponent(BAIDU_SECRET_KEY)}`;
+  const resp = await fetch(url);
+  const data = await resp.json();
+  if (data.access_token) {
+    baiduAccessToken = data.access_token;
+    baiduTokenExpireTime = now + (data.expires_in || 2592000) * 1000;
+    return baiduAccessToken;
+  }
+  throw new Error('获取百度OCR Token失败：' + (data.error_description || data.error || '未知错误'));
+}
+
+// 调用百度OCR API
+async function callBaiduOCR(base64Image, apiName, progressCb) {
+  const token = await getBaiduToken();
+  if (progressCb) progressCb(20);
+
+  // 去掉 data:image/xxx;base64, 前缀
+  const b64 = base64Image.replace(/^data:image\/\w+;base64,/, '');
+
+  const params = new URLSearchParams();
+  params.append('image', b64);
+
+  const url = `https://aip.baidubce.com/rest/2.0/ocr/v1/${apiName}?access_token=${token}`;
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params.toString()
+  });
+
+  if (progressCb) progressCb(80);
+  const json = await resp.json();
+
+  if (json.error_code) {
+    throw new Error(`百度OCR错误：${json.error_msg || json.error_code}`);
+  }
+  return json;
+}
 
 // ─── 状态 ───────────────────────────────────────────
-let invFiles = [];            // File[] 当前待上传的发票
-let otFileObj = null;         // File   当前待上传的加班记录
-let invResults = [];          // 所有已分析的发票结果（累加）
-let otRecords  = [];          // 当前加班记录行
-let otDates    = [];          // 当前加班日期列表
-let matchedDates = [];        // 当前匹配到的日期
-let currentEmployeeName = ''; // 本次分析提取到的员工姓名
-let otHistory  = [];          // 加班凭证历史快照 [{otRecords, otDates, matchedDates, canvasDataUrl, employeeName, ts}]
-let currentOtHistoryIdx = -1; // 当前显示的凭证历史索引
-let restoreTimer = null;       // 恢复提示计时器
+let invFiles = [];
+let otFileObj = null;
+let invResults = [];
+let otRecords = [];
+let otDates = [];
+let matchedDates = [];
+let currentEmployeeName = '';
+let otHistory = [];
+let currentOtHistoryIdx = -1;
+let restoreTimer = null;
 
-// ─── 上传处理 ────────────────────────────────────────────────
+// ─── 上传处理 ───────────────────────────────────────────────
 async function onInvChange(e) {
-  console.log('[onInvChange] Files selected:', e.target.files.length, 'Current invFiles:', invFiles.length);
   for (const f of Array.from(e.target.files)) {
     let fileToAdd = f;
     if (f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')) {
-      try {
-        fileToAdd = await convertPdfToImage(f);
-      } catch (err) {
-        console.error('PDF转换失败:', f.name, err);
+      try { fileToAdd = await convertPdfToImage(f); }
+      catch (err) {
         alert('PDF文件转换失败: ' + f.name + '\n请确保PDF可正常打开，或手动转为图片后上传。');
         continue;
       }
     }
     if (!invFiles.find(x => x.name === fileToAdd.name && x.size === fileToAdd.size)) {
       invFiles.push(fileToAdd);
-      console.log('[onInvChange] Added file:', fileToAdd.name, 'Total files:', invFiles.length);
-    } else {
-      console.log('[onInvChange] Duplicate file skipped:', fileToAdd.name);
     }
   }
   renderInvPreviews(); checkBtn();
@@ -480,10 +377,8 @@ async function onInvChange(e) {
 async function onOtChange(e) {
   let f = e.target.files[0] || null;
   if (f && (f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'))) {
-    try {
-      f = await convertPdfToImage(f);
-    } catch (err) {
-      console.error('PDF转换失败:', e.target.files[0].name, err);
+    try { f = await convertPdfToImage(f); }
+    catch (err) {
       alert('PDF文件转换失败: ' + e.target.files[0].name + '\n请确保PDF可正常打开，或手动转为图片后上传。');
       f = null;
     }
@@ -505,8 +400,6 @@ function renderInvPreviews() {
   invFiles.forEach((f, i) => {
     const wrap = document.createElement('div');
     wrap.className = 'preview-item';
-    
-    // 检查是否是PDF转换后的文件
     if (f.name.toLowerCase().endsWith('.png') && f.name.toLowerCase().includes('pdf')) {
       wrap.className = 'preview-item pdf-preview';
       wrap.innerHTML = `
@@ -529,23 +422,18 @@ function checkBtn() {
   document.getElementById('analyzeBtn').disabled = invFiles.length === 0 || !otFileObj;
 }
 
-// 获取待处理的新发票数量（去除重复）
 function getPendingInvCount() {
   return invFiles.filter(f => !invResults.find(r => r.fileName === f.name)).length;
 }
 
-// ─── 清空上传区（仅清空上传区，保留汇总表和凭证历史）────────────────────────────
 function clearUpload() {
   invFiles = []; otFileObj = null;
-  // 彻底重置发票input元素（克隆替换，避免浏览器缓存文件选择）
   const oldInvInput = document.getElementById('invFiles');
   const newInvInput = oldInvInput.cloneNode(true);
   oldInvInput.parentNode.replaceChild(newInvInput, oldInvInput);
-  // 彻底重置加班单input元素
   const oldOtInput = document.getElementById('otFile');
   const newOtInput = oldOtInput.cloneNode(true);
   oldOtInput.parentNode.replaceChild(newOtInput, oldOtInput);
-
   document.getElementById('invPreview').innerHTML = '';
   document.getElementById('invLabel').textContent = '';
   const img = document.getElementById('otPreviewImg'); img.src=''; img.style.display='none';
@@ -553,7 +441,6 @@ function clearUpload() {
   checkBtn();
 }
 
-// ─── 重置全部 ────────────────────────────────────────────────
 function resetAll() {
   if (!confirm('确定要重置所有数据吗？这将清空汇总表、加班凭证和历史记录。')) return;
   invFiles = []; otFileObj = null; invResults = []; otRecords = []; otDates = []; matchedDates = [];
@@ -594,7 +481,7 @@ function setupDrop(id, multi) {
       for (const f of files) {
         let fileToAdd = f;
         if (f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')) {
-          try { fileToAdd = await convertPdfToImage(f); } catch (err) { console.error('PDF转换失败:', f.name, err); continue; }
+          try { fileToAdd = await convertPdfToImage(f); } catch (err) { continue; }
         }
         if (!invFiles.find(x=>x.name===fileToAdd.name&&x.size===fileToAdd.size)) invFiles.push(fileToAdd);
       }
@@ -602,7 +489,7 @@ function setupDrop(id, multi) {
     } else if (files[0]) {
       let f = files[0];
       if (f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')) {
-        try { f = await convertPdfToImage(f); } catch (err) { console.error('PDF转换失败:', f.name, err); f = null; }
+        try { f = await convertPdfToImage(f); } catch (err) { f = null; }
       }
       if (f) {
         otFileObj = f;
@@ -637,16 +524,14 @@ function setProgress(pct, txt) {
 function fileToBase64(file) {
   return new Promise((res, rej) => {
     const r = new FileReader();
-    r.onload = e => res(e.target.result.split(',')[1]);
+    r.onload = e => res(e.target.result);
     r.onerror = rej;
     r.readAsDataURL(file);
   });
 }
 
 async function convertPdfToImage(file) {
-  if (typeof pdfjsLib === 'undefined') {
-    throw new Error('PDF.js 库未加载，请检查网络连接');
-  }
+  if (typeof pdfjsLib === 'undefined') throw new Error('PDF.js 库未加载，请检查网络连接');
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   const page = await pdf.getPage(1);
@@ -666,65 +551,40 @@ async function convertPdfToImage(file) {
   });
 }
 
-// ════════════════════════════════════════════
-//  纯前端 OCR 引擎：ocr.space API（免费，中文识别率高）
-//  备用：Tesseract.js（离线兜底）
-// ════════════════════════════════════════════
-async function callOCR(file, prompt) {
-  // 纯前端 OCR 调用
-  if (prompt === 'invoice') {
-    return await ocrImage(file);
-  } else if (prompt === 'overtime') {
-    return await ocrImage(file);
+// ═══════════════════════════════════════════
+//  百度 OCR 识别入口
+// ═══════════════════════════════════════════
+async function callOCR(file, type) {
+  const base64 = await fileToBase64(file);
+
+  if (type === 'invoice') {
+    // 发票：优先用财务票据OCR，失败后用通用高精度OCR兜底
+    try {
+      const result = await callBaiduOCR(base64, 'multiple_invoice');
+      return { content: JSON.stringify(result), raw: JSON.stringify(result), type: 'financial' };
+    } catch(e) {
+      console.warn('财务票据OCR失败，切换通用OCR:', e.message);
+      try {
+        const result = await callBaiduOCR(base64, 'accurate_basic');
+        const rawText = (result.words_result || []).map(w => w.words).join('\n');
+        return { content: rawText, raw: rawText, type: 'general' };
+      } catch(e2) {
+        console.error('通用OCR也失败:', e2.message);
+        return { content: '', raw: '', type: 'failed' };
+      }
+    }
+  } else if (type === 'overtime') {
+    // 加班记录：用通用高精度OCR
+    try {
+      const result = await callBaiduOCR(base64, 'accurate_basic');
+      const rawText = (result.words_result || []).map(w => w.words).join('\n');
+      return { content: rawText, raw: rawText, type: 'overtime' };
+    } catch(e) {
+      console.error('加班记录OCR失败:', e.message);
+      return { content: '', raw: '', type: 'failed' };
+    }
   }
   return { content: '', raw: '' };
-}
-
-async function ocrImage(file, progressCb) {
-  if (progressCb) progressCb(10);
-
-  // 尝试 ocr.space API
-  try {
-    const base64 = await fileToBase64(file);
-    if (progressCb) progressCb(30);
-
-    const formData = new FormData();
-    formData.append('base64Image', 'data:image/png;base64,' + base64);
-    formData.append('language', 'chs');        // 中文简体
-    formData.append('isOverlayRequired', 'false'); // 不需要坐标
-    formData.append('OCREngine', '2');          // Engine2 对中文更好
-    formData.append('scale', 'true');           // 放大处理
-    formData.append('isTable', 'true');         // 表格优化
-
-    const resp = await fetch('https://api.ocr.space/parse/image', {
-      method: 'POST',
-      headers: { 'apikey': OCR_SPACE_KEY },
-      body: formData
-    });
-
-    if (progressCb) progressCb(80);
-    const json = await resp.json();
-
-    if (json.ParsedResults && json.ParsedResults.length > 0 && !json.IsErroredOnProcessing) {
-      const text = json.ParsedResults[0].ParsedText || '';
-      if (progressCb) progressCb(100);
-      return { content: text, raw: text };
-    }
-  } catch(e) {
-    console.warn('ocr.space failed, falling back to Tesseract:', e.message);
-  }
-
-  // 兜底：Tesseract.js
-  if (progressCb) progressCb(40);
-  try {
-    const result = await Tesseract.recognize(file, 'chi_sim+eng', {
-      logger: m => { if(m.status==='recognizing text' && progressCb) progressCb(40 + Math.round(m.progress*60)); }
-    });
-    return { content: result.data.text, raw: result.data.text };
-  } catch(e) {
-    console.error('Tesseract failed:', e);
-    return { content: '', raw: '' };
-  }
 }
 
 function parseJSON(text) {
@@ -736,7 +596,6 @@ function parseJSON(text) {
 function normalizeText(raw) {
   if(!raw) return '';
   let s = String(raw);
-  // 去除汉字间的冗余空格
   for(let i=0;i<5;i++){
     const p=s;
     s=s.replace(/([\u4e00-\u9fa5])\s+([\u4e00-\u9fa5])/g,'$1$2');
@@ -749,8 +608,7 @@ function normalizeText(raw) {
 
 function normalizeDate(s) {
   if (!s) return '';
-  s = String(s).trim()
-      .replace(/年/g,'-').replace(/月/g,'-').replace(/日/g,'').replace(/\//g,'-');
+  s = String(s).trim().replace(/年/g,'-').replace(/月/g,'-').replace(/日/g,'').replace(/\//g,'-');
   if (/^\d{1,2}-\d{1,2}$/.test(s)) s = new Date().getFullYear() + '-' + s;
   const p = s.split('-');
   if (p.length === 3) return `${p[0]}-${p[1].padStart(2,'0')}-${p[2].padStart(2,'0')}`;
@@ -764,16 +622,16 @@ function fallbackDates(text) {
   return [...set].map(normalizeDate);
 }
 
-// Extract employee name from OCR text (frontend version)
+// 从OCR文本中提取员工姓名
 function extractEmployeeNameFromText(text) {
   if (!text) return '';
   const flatText = text.replace(/\n/g, ' ').replace(/\s+/g, ' ');
-  
-  // Priority 1: v_ / v- prefix pattern (e.g., v_isweduan, v-isweduan)
+
+  // Priority 1: v_ / v- 前缀
   const vMatch = text.match(/v[_\-][a-zA-Z0-9_]+/i);
   if (vMatch) return vMatch[0].replace(/v-/i, 'v_').toLowerCase();
-  
-  // Priority 2: 申请人 / 姓名 / 员工 / 员工姓名 with flexible separators
+
+  // Priority 2: 关键词后的内容
   const patterns = [
     /申请人[：:\s]+([a-zA-Z0-9_\u4e00-\u9fa5]+)/,
     /姓名[：:\s]+([a-zA-Z0-9_\u4e00-\u9fa5]+)/,
@@ -785,82 +643,198 @@ function extractEmployeeNameFromText(text) {
     const m = flatText.match(p);
     if (m) return m[1];
   }
-  
-  // Priority 3: standalone v_ pattern on its own line
+
+  // Priority 3: 独立一行的 v_ 格式
   const vLineMatch = text.match(/^v[_\-][a-zA-Z0-9_]+$/m);
   if (vLineMatch) return vLineMatch[0].replace(/v-/i, 'v_').toLowerCase();
-  
+
   return '';
 }
 
-// ════════════════════════════════════════════
-//  解析发票 OCR 结果
-// ════════════════════════════════════════════
-function parseInvoiceText(ocrText) {
+// ═══════════════════════════════════════════
+//  解析百度财务票据OCR结果（multiple_invoice）
+// ═══════════════════════════════════════════
+function parseBaiduInvoiceResult(ocrResult) {
+  let date='', time='', amount='', origin='', dest='', type='网约车', invoice_no='';
+
+  try {
+    const data = typeof ocrResult === 'string' ? JSON.parse(ocrResult) : ocrResult;
+    if (!data || !data.words_result) return { date, time, amount, origin, dest, type, invoice_no };
+
+    const results = data.words_result || [];
+    const rawText = data.words_result_num ? '' : (data.words_result || []).map(w => w.words).join('\n');
+
+    // 遍历所有识别结果
+    for (const item of results) {
+      const itemType = item.type || '';
+      const fields = item.fields || {};
+
+      // 判断发票类型
+      if (/出租/.test(itemType) || /taxi/.test(itemType.toLowerCase())) {
+        type = '出租车';
+      } else if (/网约|online/.test(itemType)) {
+        type = '网约车';
+      } else if (/增值|vat/.test(itemType)) {
+        type = '增值税发票';
+      }
+
+      // 提取字段
+      if (fields.Date) date = normalizeDate(fields.Date);
+      if (fields.Time) time = fields.Time;
+      if (fields.TotalFare) amount = String(fields.TotalFare).replace(/[^\d.]/g, '');
+      if (fields.PickupLocation) origin = fields.PickupLocation;
+      if (fields.DropoffLocation) dest = fields.DropoffLocation;
+      if (fields.InvoiceNum) invoice_no = fields.InvoiceNum;
+
+      // 网约车行程单（items数组）
+      if (fields.items && fields.items.length > 0) {
+        const it = fields.items[0];
+        if (it.pickup_date) date = normalizeDate(it.pickup_date);
+        if (it.pickup_time && it.dropoff_time) time = it.pickup_time + '-' + it.dropoff_time;
+        if (it.fare) amount = String(it.fare).replace(/[^\d.]/g, '');
+        if (it.start_place) origin = it.start_place;
+        if (it.destination_place) dest = it.destination_place;
+      }
+    }
+
+    // 如果没提取到，尝试从原始文本中用正则兜底
+    const allText = results.map(r => {
+      const f = r.fields || {};
+      return Object.values(f).join(' ') + ' ' + (r.words || '');
+    }).join('\n');
+
+    if (!date) {
+      const dm = allText.match(/(\d{4})[年\-/](\d{1,2})[月\-/](\d{1,2})/);
+      if (dm) date = normalizeDate(`${dm[1]}-${dm[2]}-${dm[3]}`);
+    }
+    if (!amount) {
+      const am = allText.match(/[¥￥]\s*(\d+\.?\d*)/) || allText.match(/(?:合计|总计|金额)[：:\s]*([\d.]+)/);
+      if (am) amount = am[1];
+    }
+    if (!time) {
+      const tm = allText.match(/(\d{1,2}:\d{2})/g);
+      if (tm && tm.length >= 2) time = tm[0] + '-' + tm[tm.length-1];
+      else if (tm && tm.length === 1) time = tm[0];
+    }
+
+  } catch(e) {
+    console.error('解析百度发票OCR结果失败:', e);
+  }
+
+  return { date, time, amount, origin, dest, type, invoice_no };
+}
+
+// ═══════════════════════════════════════════
+//  解析发票 OCR 结果（主入口，兼容百度返回）
+// ═══════════════════════════════════════════
+function parseInvoiceText(ocrContent, ocrType) {
+  if (ocrType === 'financial') {
+    return parseBaiduInvoiceResult(ocrContent);
+  }
+
+  // 通用OCR文本解析（accurate_basic 返回的文本）
   let date='', time='', amount='', origin='', dest='', type='网约车';
-  
+
+  if (!ocrContent) return { date, time, amount, origin, dest, type };
+
   // 类型识别
-  if(/滴滴/.test(ocrText)) type='网约车';
-  else if(/如祺/.test(ocrText)) type='网约车';
-  else if(/高德/.test(ocrText)) type='网约车';
-  else if(/T3|曹操|享道|嘀嗒/.test(ocrText)) type='网约车';
-  else if(/出租|的士/.test(ocrText)) type='出租车';
-  else if(/公交|地铁/.test(ocrText)) type='公交/地铁';
-  
-  // 日期时间提取（简化版，实际应根据需要增强）
-  const dateMatch = ocrText.match(/(\d{4})[年\-/](\d{1,2})[月\-/](\d{1,2})/);
+  if (/滴滴/.test(ocrContent)) type='网约车';
+  else if (/如祺/.test(ocrContent)) type='网约车';
+  else if (/高德/.test(ocrContent)) type='网约车';
+  else if (/T3|曹操|享道|嘀嗒/.test(ocrContent)) type='网约车';
+  else if (/出租|的士/.test(ocrContent)) type='出租车';
+  else if (/公交|地铁/.test(ocrContent)) type='公交/地铁';
+
+  // 日期
+  const dateMatch = ocrContent.match(/(\d{4})[年\-/](\d{1,2})[月\-/](\d{1,2})/);
   if (dateMatch) {
     date = `${dateMatch[1]}-${dateMatch[2].padStart(2,'0')}-${dateMatch[3].padStart(2,'0')}`;
   }
-  
-  const timeMatches = ocrText.match(/(\d{1,2}):(\d{2})/g) || [];
+
+  // 时间
+  const timeMatches = ocrContent.match(/(\d{1,2}):(\d{2})/g) || [];
   if (timeMatches.length >= 2) {
     time = `${timeMatches[0]} ~ ${timeMatches[timeMatches.length-1]}`;
   } else if (timeMatches.length === 1) {
     time = timeMatches[0];
   }
-  
-  // 金额提取
-  const amtMatch = ocrText.match(/[¥￥]\s*(\d+\.?\d*)/) || ocrText.match(/合计[：:\s]*([\d.]+)/);
+
+  // 金额
+  const amtMatch = ocrContent.match(/[¥￥]\s*(\d+\.?\d*)/) || ocrContent.match(/(?:合计|总计|金额)[：:\s]*([\d.]+)/);
   if (amtMatch) amount = amtMatch[1];
-  
-  // 起终点提取
-  const fromMatch = ocrText.match(/(?:起点|出发地|上车点)[：:\s]*([^\n，,]{2,15})/);
-  const toMatch = ocrText.match(/(?:终点|目的地|下车点)[：:\s]*([^\n，,]{2,15})/);
+
+  // 起终点
+  const fromMatch = ocrContent.match(/(?:起点|出发地|上车点|上车)[：:\s]*([^\n，,]{2,15})/);
+  const toMatch = ocrContent.match(/(?:终点|目的地|下车点|下车)[：:\s]*([^\n，,]{2,15})/);
   if (fromMatch) origin = fromMatch[1].trim();
   if (toMatch) dest = toMatch[1].trim();
-  
+
   return { date, time, amount, origin, dest, type };
 }
 
-// ════════════════════════════════════════════
-//  解析加班记录 OCR 结果
-// ════════════════════════════════════════════
+// ═══════════════════════════════════════════
+//  解析加班记录 OCR 结果（百度通用OCR文本）
+// ═══════════════════════════════════════════
 function parseOvertimeText(ocrText) {
   const records = [];
+  if (!ocrText) return records;
+
   const lines = ocrText.split('\n');
-  
+  const dateMap = new Map(); // dateStr -> {times, rawLines}
+
+  // 支持多种日期格式
+  const datePat1 = /(\d{4})[年\-/](\d{1,2})[月\-/](\d{1,2})/;
+  const datePat2 = /(\d{1,2})[月\-/](\d{1,2})/;
+
   for (const line of lines) {
-    const dateMatch = line.match(/(\d{4})[年\-/](\d{1,2})[月\-/](\d{1,2})/);
-    if (dateMatch) {
-      const date = `${dateMatch[1]}-${dateMatch[2].padStart(2,'0')}-${dateMatch[3].padStart(2,'0')}`;
+    const dm = line.match(datePat1) || line.match(datePat2);
+    if (dm) {
+      let dateStr;
+      if (dm[0].includes('年') || dm[0].includes('-') && dm[1] && dm[1].length === 4) {
+        dateStr = normalizeDate(dm[0]);
+      } else {
+        dateStr = normalizeDate(new Date().getFullYear() + '-' + dm[1] + '-' + dm[2]);
+      }
+
       const timeMatches = line.match(/(\d{1,2}):(\d{2})/g) || [];
-      records.push({
-        date,
-        start: timeMatches[0] || '',
-        end: timeMatches[1] || '',
-        hours: '',
-        employee: '',
-        raw: line
-      });
+      if (!dateMap.has(dateStr)) {
+        dateMap.set(dateStr, { times: [], rawLines: [] });
+      }
+      const entry = dateMap.get(dateStr);
+      timeMatches.forEach(t => entry.times.push(t));
+      entry.rawLines.push(line.trim());
     }
   }
-  
+
+  // 计算每个日期的加班时长
+  for (const [dateStr, entry] of dateMap) {
+    const times = [...new Set(entry.times)].sort();
+    let start = '', end = '', hours = '';
+    if (times.length >= 2) {
+      start = times[0];
+      end = times[times.length - 1];
+      const [sh, sm] = start.split(':').map(Number);
+      const [eh, em] = end.split(':').map(Number);
+      hours = ((eh * 60 + em - sh * 60 - sm) / 60).toFixed(1);
+    } else if (times.length === 1) {
+      start = times[0];
+    }
+    records.push({
+      date: dateStr,
+      start_time: start,
+      end_time: end,
+      time: start + (end ? '-' + end : ''),
+      hours,
+      employee: '',
+      raw: entry.rawLines.join(' | ')
+    });
+  }
+
   return records;
 }
 
 // ─── 主流程 ─────────────────────────────────────────────────
-let lastAnalysisCount = 0; // 本次分析前已有的记录数
+let lastAnalysisCount = 0;
 
 async function startAnalysis() {
   document.getElementById('analyzeBtn').disabled = true;
@@ -874,20 +848,16 @@ async function startAnalysis() {
   initProgress(steps);
 
   try {
-    // ── 1. 过滤重复发票 ──────────────────────────────────────
+    // 1. 过滤重复发票
     const newFiles = invFiles.filter(f => !invResults.find(r => r.fileName === f.name));
     if (newFiles.length === 0 && invFiles.length > 0) {
       setProgress(100, '⚠️ 所选发票均已分析过，如需重新分析请先重置全部。');
       document.getElementById('analyzeBtn').disabled = false;
       return;
     }
-    if (newFiles.length < invFiles.length) {
-      const skip = invFiles.length - newFiles.length;
-      console.log(`[Main] Skipping ${skip} duplicate invoice(s)`);
-    }
     lastAnalysisCount = invResults.length;
 
-    // ── 2. 逐张识别发票 ──────────────────────────────────────
+    // 2. 逐张识别发票
     setStep('inv','active');
     for (let i = 0; i < newFiles.length; i++) {
       const f = newFiles[i];
@@ -896,71 +866,71 @@ async function startAnalysis() {
         `识别第 ${i+1}/${newFiles.length} 张发票：${f.name}`
       );
       try {
-        const raw = await callOCR(f, 'invoice');
-        const obj = parseInvoiceText(raw.content || '');
+        const ocr = await callOCR(f, 'invoice');
+        const parsed = parseInvoiceText(ocr.content || '', ocr.type);
         invResults.push({
           fileName: f.name,
-          date:    obj.date    || '',
-          time:    obj.time    || '',
-          amount:  obj.amount  || '',
-          origin:  obj.origin  || '',
-          dest:    obj.dest    || '',
-          type:    obj.type    || '网约车',
+          date:     parsed.date    || '',
+          time:     parsed.time    || '',
+          amount:   parsed.amount  || '',
+          origin:   parsed.origin  || '',
+          dest:     parsed.dest    || '',
+          type:     parsed.type    || '网约车',
+          invoice_no: parsed.invoice_no || '',
           employee: currentEmployeeName,
-          raw:     raw.content || '',
-          error:   '',
-          matched: false
+          raw:      ocr.raw || '',
+          error:    '',
+          matched:  false
         });
       } catch(e) {
         invResults.push({
           fileName: f.name, date:'', time:'', amount:'', origin:'', dest:'',
-          type:'网约车', employee: '', raw:'', error: e.message,
-          matched: false
+          type:'网约车', employee:'', raw:'', error: e.message, matched: false
         });
       }
     }
     setStep('inv','done');
 
-    // ── 3. 识别加班记录 ──────────────────────────────────────
+    // 3. 识别加班记录
     setStep('ot','active');
     setProgress(52, '识别加班记录...');
-    let otRaw = { content: '', raw: '' };
-    try { otRaw = await callOCR(otFileObj, 'overtime'); } catch(e) { console.warn('加班记录识别失败', e); }
+    let otRaw = { content: '', raw: '', type: '' };
+    try {
+      otRaw = await callOCR(otFileObj, 'overtime');
+    } catch(e) {
+      console.warn('加班记录识别失败', e);
+    }
 
     otRecords = parseOvertimeText(otRaw.content || '');
     otDates = otRecords.map(r => r.date).filter(Boolean);
     otDates = [...new Set(otDates)];
-    
-    // 提取员工姓名
+
     currentEmployeeName = extractEmployeeNameFromText(otRaw.content || '');
-    
-    // 更新已识别的发票结果中的员工姓名（仅更新本次新增的发票）
     for (let i = lastAnalysisCount; i < invResults.length; i++) {
       invResults[i].employee = currentEmployeeName;
     }
 
     setStep('ot','done');
 
-    // ── 4. 日期匹配（仅匹配本次新增的发票，不影响之前批次的匹配状态）──────────────────────────────
+    // 4. 日期匹配
     setStep('match','active');
     setProgress(72, '匹配发票日期与加班日期...');
     matchedDates = [];
     for (let i = lastAnalysisCount; i < invResults.length; i++) {
       const inv = invResults[i];
       inv.normDate = normalizeDate(inv.date);
-      inv.matched  = inv.normDate ? otDates.includes(inv.normDate) : false;
+      inv.matched = inv.normDate ? otDates.includes(inv.normDate) : false;
       if (inv.matched && !matchedDates.includes(inv.normDate)) matchedDates.push(inv.normDate);
     }
     setStep('match','done');
 
-    // ── 5. 保存加班凭证快照 ──────────────────────────────────
+    // 5. 保存凭证快照
     setStep('render','active');
     setProgress(80, '保存凭证快照...');
-    // 先绘制canvas，再保存快照
     await renderOtCanvas();
     saveOtHistory();
 
-    // ── 6. 渲染汇总表 ───────────────────────────────────────
+    // 6. 渲染汇总表
     setProgress(86, '生成汇总表...');
     renderSummaryTable();
     renderOtTable();
@@ -969,19 +939,14 @@ async function startAnalysis() {
     setStep('render','done');
     setProgress(100, '✅ 分析完成！');
 
-    // 滚动到汇总表
     setTimeout(() => document.getElementById('summaryCard').scrollIntoView({ behavior:'smooth' }), 200);
-
-    // 高亮新行
     highlightNewRows();
-
-    // 保存到 localStorage
     saveToLocalStorage();
 
     document.getElementById('statusBar').textContent =
       `完成：共 ${invResults.length} 张发票，本次新增 ${invResults.length - lastAnalysisCount} 张，匹配到 ${matchedDates.length} 个加班日期（${matchedDates.join('、') || '无'}）`;
 
-    // 清空上传区，准备下一位员工
+    // 清空上传区
     invFiles = []; otFileObj = null;
     const oldInvInput2 = document.getElementById('invFiles');
     const newInvInput2 = oldInvInput2.cloneNode(true);
@@ -1010,36 +975,34 @@ function renderSummaryTable() {
   }
   invResults.forEach((inv, i) => {
     const remarkTxt = inv.matched
-      ? '✅ 已匹配加班记录'
-      : (inv.date ? '⚠️ 未找到对应加班记录' : (inv.error ? '❌识别失败' : ''));
+        ? '✅ 已匹配加班记录'
+        : (inv.date ? '⚠️ 未找到对应加班记录' : (inv.error ? '❌识别失败' : ''));
     const isOnline = /网约|滴滴|曹操|高德|嘀嗒/.test(inv.type);
-    const isTaxi   = /出租/.test(inv.type);
     const amtOnline = isOnline ? inv.amount : '';
     const amtOther  = !isOnline ? inv.amount : '';
     const tr = document.createElement('tr');
     tr.dataset.idx = i;
     tr.innerHTML = `
-      <td>${i+1}</td>
-      <td><button class="del-row-btn" title="删除此行" onclick="deleteRow(${i})">🗑</button></td>
-      <td><input type="text" placeholder="部门" data-idx="${i}" data-field="dept" /></td>
-      <td><input type="text" placeholder="项目组" data-idx="${i}" data-field="project" /></td>
-      <td><input type="text" placeholder="工号" data-idx="${i}" data-field="empId" /></td>
-      <td><input type="text" placeholder="姓名" data-idx="${i}" data-field="name" value="${inv.employee || ''}" /></td>
-      <td>${inv.origin  || '<span style="color:#bbb">未识别</span>'}</td>
-      <td>${inv.dest    || '<span style="color:#bbb">未识别</span>'}</td>
-      <td>${inv.date    || '<span style="color:#bbb">未识别</span>'}</td>
-      <td>${inv.time    || '<span style="color:#bbb">未识别</span>'}</td>
-      <td><input type="text" value="${amtOnline}" placeholder="0.00" /></td>
-      <td><input type="text" value="${amtOther}" placeholder="0.00" /></td>
-      <td><strong>${inv.amount ? '¥'+inv.amount : ''}</strong></td>
-      <td><input type="text" placeholder="是/否" data-idx="${i}" data-field="isClient" /></td>
-      <td style="font-size:11px;">${remarkTxt}</td>
-    `;
+        <td>${i+1}</td>
+        <td><button class="del-row-btn" title="删除此行" onclick="deleteRow(${i})">🗑</button></td>
+        <td><input type="text" placeholder="部门" data-idx="${i}" data-field="dept" /></td>
+        <td><input type="text" placeholder="项目组" data-idx="${i}" data-field="project" /></td>
+        <td><input type="text" placeholder="工号" data-idx="${i}" data-field="empId" /></td>
+        <td><input type="text" placeholder="姓名" data-idx="${i}" data-field="name" value="${inv.employee || ''}" /></td>
+        <td>${inv.origin  || '<span style="color:#bbb">未识别</span>'}</td>
+        <td>${inv.dest    || '<span style="color:#bbb">未识别</span>'}</td>
+        <td>${inv.date    || '<span style="color:#bbb">未识别</span>'}</td>
+        <td>${inv.time    || '<span style="color:#bbb">未识别</span>'}</td>
+        <td><input type="text" value="${amtOnline}" placeholder="0.00" /></td>
+        <td><input type="text" value="${amtOther}" placeholder="0.00" /></td>
+        <td><strong>${inv.amount ? '¥'+inv.amount : ''}</strong></td>
+        <td><input type="text" placeholder="是/否" data-idx="${i}" data-field="isClient" /></td>
+        <td style="font-size:11px;">${remarkTxt}</td>
+      `;
     body.appendChild(tr);
   });
 }
 
-// 删除行
 function deleteRow(idx) {
   if (!confirm('确定删除第 ' + (idx+1) + ' 行吗？')) return;
   invResults.splice(idx, 1);
@@ -1047,7 +1010,6 @@ function deleteRow(idx) {
   saveToLocalStorage();
 }
 
-// 高亮新增加的行
 function highlightNewRows() {
   const body = document.getElementById('summaryBody');
   const rows = body.querySelectorAll('tr[data-idx]');
@@ -1135,20 +1097,13 @@ async function renderOtCanvas() {
 function saveOtHistory() {
   const canvas = document.getElementById('overtimeCanvas');
   const dataUrl = canvas.toDataURL('image/png');
-  // 保存本次批次的发票数据（用于按批次独立展示加班凭证）
   const batchInvs = [];
   for (let i = lastAnalysisCount; i < invResults.length; i++) {
     const inv = invResults[i];
     batchInvs.push({
-      fileName: inv.fileName,
-      date: inv.date,
-      time: inv.time,
-      amount: inv.amount,
-      origin: inv.origin,
-      dest: inv.dest,
-      matched: inv.matched,
-      normDate: inv.normDate,
-      employee: inv.employee,
+      fileName: inv.fileName, date: inv.date, time: inv.time, amount: inv.amount,
+      origin: inv.origin, dest: inv.dest, matched: inv.matched,
+      normDate: inv.normDate, employee: inv.employee,
     });
   }
   const snapshot = {
@@ -1184,8 +1139,6 @@ function switchOtHistory(idx) {
   if (idx < 0 || idx >= otHistory.length) return;
   currentOtHistoryIdx = idx;
   const snap = otHistory[idx];
-
-  // 恢复 canvas
   const canvas = document.getElementById('overtimeCanvas');
   const ctx = canvas.getContext('2d');
   const img = new Image();
@@ -1196,14 +1149,10 @@ function switchOtHistory(idx) {
     renderOtHistoryTabs();
   };
   img.src = snap.canvasDataUrl;
-
-  // 恢复表格
   otRecords = [...snap.otRecords];
   otDates = [...snap.otDates];
   matchedDates = [...snap.matchedDates];
   renderOtTableBodyOnly();
-
-  // 同步更新导出区域，确保导出内容对应当前批次
   const ex = document.getElementById('otTblExport');
   if (ex) {
     ex.style.display = 'block';
@@ -1218,7 +1167,6 @@ function renderOtTableBodyOnly() {
   body.innerHTML = '';
   const snap = otHistory[currentOtHistoryIdx];
   if (!snap) { body.innerHTML = '<tr><td colspan="7" class="empty-msg">暂无数据</td></tr>'; return; }
-  // 只显示当前快照批次的发票，不与其他批次混杂
   const batchInvs = snap.batchInvs || [];
   if (batchInvs.length > 0) {
     batchInvs.forEach((inv, i) => {
@@ -1236,7 +1184,6 @@ function renderOtTableBodyOnly() {
       body.appendChild(tr);
     });
   } else {
-    // 兼容旧快照（无 batchInvs）：降级显示所有发票
     invResults.forEach((inv, i) => {
       const isMatch = inv.matched;
       const tr = document.createElement('tr');
@@ -1256,7 +1203,6 @@ function renderOtTableBodyOnly() {
 
 function renderOtTable() {
   renderOtTableBodyOnly();
-  // 同步到导出用的隐藏 div
   const ex = document.getElementById('otTblExport');
   ex.style.display = 'block';
   ex.innerHTML = `<div style="font-size:14px;font-weight:bold;text-align:center;margin-bottom:8px;color:#c62828;">加班凭证</div>` +
@@ -1320,7 +1266,7 @@ function renderReview(otRaw) {
               const isMatched = matchedDates.includes(r.date);
               return `<tr style="${isMatched?'background:#e6f4ea;font-weight:600':''}">
                 <td>${i+1}</td><td>${r.date||'-'}</td>
-                <td>${r.start||'-'}</td><td>${r.end||'-'}</td>
+                <td>${r.start_time||'-'}</td><td>${r.end_time||'-'}</td>
                 <td>${r.hours||'-'}</td>
                 <td><span class="badge ${isMatched?'badge-yes':'badge-no'}">${isMatched?'✓ 已匹配':'✗ 未匹配'}</span></td>
               </tr>`;
@@ -1359,25 +1305,14 @@ function saveToLocalStorage() {
     const idx = tr.dataset.idx;
     const inputs = tr.querySelectorAll('input');
     const vals = {};
-    inputs.forEach(inp => {
-      if (inp.dataset.field) vals[inp.dataset.field] = inp.value;
-    });
+    inputs.forEach(inp => { if (inp.dataset.field) vals[inp.dataset.field] = inp.value; });
     if (Object.keys(vals).length) summaryEdits[idx] = vals;
   });
-
-  const data = {
-    invResults,
-    summaryEdits,
-    otHistory,
-    currentOtHistoryIdx,
-    ts: Date.now()
-  };
+  const data = { invResults, summaryEdits, otHistory, currentOtHistoryIdx, ts: Date.now() };
   try { localStorage.setItem(getStorageKey(), JSON.stringify(data)); } catch(e) {}
 }
 
-function clearLocalStorage() {
-  localStorage.removeItem(getStorageKey());
-}
+function clearLocalStorage() { localStorage.removeItem(getStorageKey()); }
 
 function tryRestoreFromStorage() {
   try {
@@ -1385,15 +1320,11 @@ function tryRestoreFromStorage() {
     if (!raw) return;
     const data = JSON.parse(raw);
     if (!data || !data.invResults || data.invResults.length === 0) return;
-
-    // 显示恢复提示，5秒后自动取消
     const prompt = document.getElementById('restorePrompt');
     prompt.classList.add('show');
     prompt.style.display = 'flex';
     restoreTimer = setTimeout(() => dismissRestore(), 5000);
-  } catch(e) {
-    localStorage.removeItem(getStorageKey());
-  }
+  } catch(e) { localStorage.removeItem(getStorageKey()); }
 }
 
 function restoreData() {
@@ -1405,11 +1336,7 @@ function restoreData() {
     invResults = data.invResults || [];
     otHistory = data.otHistory || [];
     currentOtHistoryIdx = data.currentOtHistoryIdx || -1;
-
-    // 恢复汇总表
     renderSummaryTable();
-
-    // 恢复编辑内容
     if (data.summaryEdits) {
       document.querySelectorAll('#summaryBody tr[data-idx]').forEach(tr => {
         const idx = tr.dataset.idx;
@@ -1423,17 +1350,12 @@ function restoreData() {
         }
       });
     }
-
-    // 恢复最新的凭证快照
     if (currentOtHistoryIdx >= 0 && currentOtHistoryIdx < otHistory.length) {
       switchOtHistory(currentOtHistoryIdx);
     }
-
     renderOtHistoryTabs();
     document.getElementById('statusBar').textContent = `已恢复上次数据：共 ${invResults.length} 条记录`;
-  } catch(e) {
-    console.error('Restore failed', e);
-  }
+  } catch(e) { console.error('Restore failed', e); }
   dismissRestore();
 }
 
@@ -1442,20 +1364,16 @@ function dismissRestore() {
   const prompt = document.getElementById('restorePrompt');
   prompt.classList.remove('show');
   prompt.style.display = 'none';
-  // 清除 localStorage，避免下次刷新再次提示
   localStorage.removeItem(getStorageKey());
 }
 
-// 页面离开前自动保存
 window.addEventListener('beforeunload', () => saveToLocalStorage());
 
 // ─── 导出 ────────────────────────────────────────────────────
 function exportExcel() {
   const tbl = document.getElementById('summaryTable');
   const clone = tbl.cloneNode(true);
-  clone.querySelectorAll('input').forEach(el => {
-    el.closest('td').textContent = el.value;
-  });
+  clone.querySelectorAll('input').forEach(el => { el.closest('td').textContent = el.value; });
   const html = ['<!DOCTYPE html><html><head><meta charset="UTF-8"><style>th{background:#ffeb3b;}td,th{border:1px solid #ccc;padding:5px;}</style></head><body>',clone.outerHTML,'</body></html>'].join('');
   const blob = new Blob([html],{type:'application/vnd.ms-excel;charset=utf-8'});
   const a = document.createElement('a');
@@ -1469,10 +1387,9 @@ function exportCSV() {
   const rows = [['序号','部门','项目组','工号','姓名','起点','终点','乘车日期','乘车时间','网约车','出租车/公交/其他','小计','是否客户结算','备注']];
   invResults.forEach((inv, i) => {
     const isOnline = /网约|滴滴|曹操|高德|嘀嗒/.test(inv.type);
-    const isTaxi   = /出租/.test(inv.type);
     const amtOnline = isOnline ? inv.amount : '';
     const amtOther  = !isOnline ? inv.amount : '';
-    rows.push([i+1,'','','', inv.employee||'', inv.origin, inv.dest, inv.date, inv.time,
+    rows.push([i+1,'','','', inv.employee||'','','', inv.origin, inv.dest, inv.date, inv.time,
       amtOnline, amtOther, inv.amount, '', inv.matched?'已匹配加班记录':'未匹配']);
   });
   const csv = rows.map(r => r.map(c=>`"${String(c??'').replace(/"/g,'""')}"`).join(',')).join('\n');
