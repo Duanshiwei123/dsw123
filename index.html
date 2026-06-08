@@ -6,7 +6,8 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>打车发票 & 加班记录核验系统 v4.1</title>
+  <title>打车发票 & 加班记录核验系统 v5.0</title>
+  <script src="https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif; background: #f0f2f5; color: #333; min-height: 100vh; }
@@ -292,56 +293,69 @@
 
 <script>
 // ═══════════════════════════════════════════
-//  百度智能云 OCR 配置（纯前端调用）
+//  Tesseract.js OCR 引擎（纯前端，无CORS问题）
 // ═══════════════════════════════════════════
-const BAIDU_API_KEY = 'SvxOgu11sRL76eYh5AX0z3rP';
-const BAIDU_SECRET_KEY = 'VlubSseDX9x9uQHDH9mf4Kbn5n4zS772';
+let tesseractWorker = null;
 
-let baiduAccessToken = null;
-let baiduTokenExpireTime = 0;
+// 预加载 Tesseract worker（首次约10MB中文训练数据）
+async function initTesseract() {
+  if (tesseractWorker) return;
+  const statusBar = document.getElementById('statusBar');
+  statusBar.textContent = '⏳ 正在加载 OCR 引擎（首次需下载中文训练数据，约10MB，请稍候）...';
 
-// 获取百度OCR Access Token（自动缓存，过期前5分钟刷新）
-async function getBaiduToken() {
-  const now = Date.now();
-  if (baiduAccessToken && now < baiduTokenExpireTime - 5 * 60 * 1000) {
-    return baiduAccessToken;
+  try {
+    tesseractWorker = await Tesseract.createWorker('chi_sim', 1, {
+      logger: m => {
+        if (m.status === 'loading language traineddata') {
+          statusBar.textContent = `⏳ 正在下载中文训练数据... ${Math.round(m.progress * 100)}%`;
+        }
+      },
+      errorHandler: err => console.error('Tesseract error:', err)
+    });
+    statusBar.textContent = '✅ OCR 引擎已就绪';
+  } catch (e) {
+    statusBar.textContent = '❌ OCR 引擎加载失败：' + e.message;
+    throw e;
   }
-  const url = `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${encodeURIComponent(BAIDU_API_KEY)}&client_secret=${encodeURIComponent(BAIDU_SECRET_KEY)}`;
-  const resp = await fetch(url);
-  const data = await resp.json();
-  if (data.access_token) {
-    baiduAccessToken = data.access_token;
-    baiduTokenExpireTime = now + (data.expires_in || 2592000) * 1000;
-    return baiduAccessToken;
-  }
-  throw new Error('获取百度OCR Token失败：' + (data.error_description || data.error || '未知错误'));
 }
 
-// 调用百度OCR API
-async function callBaiduOCR(base64Image, apiName, progressCb) {
-  const token = await getBaiduToken();
-  if (progressCb) progressCb(20);
+// 图片预处理（灰度化 + 对比度增强，提升识别率）
+async function preprocessImage(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
 
-  // 去掉 data:image/xxx;base64, 前缀
-  const b64 = base64Image.replace(/^data:image\/\w+;base64,/, '');
+      // 限制最大尺寸，提高处理速度
+      const maxDim = 2500;
+      let w = img.width, h = img.height;
+      if (w > maxDim || h > maxDim) {
+        const scale = Math.min(maxDim / w, maxDim / h);
+        w = Math.round(w * scale);
+        h = Math.round(h * scale);
+      }
+      canvas.width = w;
+      canvas.height = h;
+      ctx.drawImage(img, 0, 0, w, h);
 
-  const params = new URLSearchParams();
-  params.append('image', b64);
-
-  const url = `https://aip.baidubce.com/rest/2.0/ocr/v1/${apiName}?access_token=${token}`;
-  const resp = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: params.toString()
+      // 灰度化 + 增强对比度
+      const imgData = ctx.getImageData(0, 0, w, h);
+      const d = imgData.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+        const contrast = 1.8;
+        const adj = Math.min(255, Math.max(0, (gray - 128) * contrast + 128));
+        d[i] = d[i + 1] = d[i + 2] = adj;
+      }
+      ctx.putImageData(imgData, 0, 0);
+      resolve(canvas);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('图片加载失败')); };
+    img.src = url;
   });
-
-  if (progressCb) progressCb(80);
-  const json = await resp.json();
-
-  if (json.error_code) {
-    throw new Error(`百度OCR错误：${json.error_msg || json.error_code}`);
-  }
-  return json;
 }
 
 // ─── 状态 ───────────────────────────────────────────
@@ -552,52 +566,16 @@ async function convertPdfToImage(file) {
 }
 
 // ═══════════════════════════════════════════
-//  百度 OCR 识别入口
+//  Tesseract.js OCR 识别入口
 // ═══════════════════════════════════════════
 async function callOCR(file, type) {
-  const base64 = await fileToBase64(file);
+  if (!tesseractWorker) await initTesseract();
 
-  if (type === 'invoice') {
-    // 发票：优先用财务票据OCR，如果返回空结果则回退到通用高精度OCR
-    try {
-      const result = await callBaiduOCR(base64, 'multiple_invoice');
-      const fields = result.words_result || {};
-      // 检查multiple_invoice是否返回了有效结果
-      const hasValidResult = Object.keys(fields).length > 0 && 
-        (fields.InvoiceType || fields.InvoiceDate || fields.TotalAmount || fields.InvoiceNum);
-      
-      if (hasValidResult) {
-        // 有有效结果，使用财务票据OCR
-        const rawText = Object.entries(fields).map(([k, v]) => `${k}: ${v}`).join('\n');
-        return { content: JSON.stringify(result), raw: rawText, type: 'financial' };
-      }
-      // 空结果，继续用accurate_basic
-      console.warn('财务票据OCR返回空结果，切换通用OCR');
-    } catch(e) {
-      console.warn('财务票据OCR失败，切换通用OCR:', e.message);
-    }
-    
-    // 回退到accurate_basic
-    try {
-      const result = await callBaiduOCR(base64, 'accurate_basic');
-      const rawText = (result.words_result || []).map(w => w.words).join('\n');
-      return { content: rawText, raw: rawText, type: 'general' };
-    } catch(e2) {
-      console.error('通用OCR也失败:', e2.message);
-      return { content: '', raw: '', type: 'failed' };
-    }
-  } else if (type === 'overtime') {
-    // 加班记录：用通用高精度OCR
-    try {
-      const result = await callBaiduOCR(base64, 'accurate_basic');
-      const rawText = (result.words_result || []).map(w => w.words).join('\n');
-      return { content: rawText, raw: rawText, type: 'overtime' };
-    } catch(e) {
-      console.error('加班记录OCR失败:', e.message);
-      return { content: '', raw: '', type: 'failed' };
-    }
-  }
-  return { content: '', raw: '' };
+  const canvas = await preprocessImage(file);
+  const result = await tesseractWorker.recognize(canvas);
+  const text = normalizeText(result.data.text);
+
+  return { content: text, raw: text, type: 'general' };
 }
 
 function parseJSON(text) {
@@ -665,159 +643,71 @@ function extractEmployeeNameFromText(text) {
 }
 
 // ═══════════════════════════════════════════
-//  解析百度财务票据OCR结果（multiple_invoice）
-//  百度API返回格式：{ "words_result": { "InvoiceType": "...", "InvoiceDate": "...", ... } }
+//  解析发票 OCR 结果（Tesseract.js 纯文本解析）
 // ═══════════════════════════════════════════
-function parseBaiduInvoiceResult(ocrResult, rawText) {
-  let date='', time='', amount='', origin='', dest='', type='网约车', invoice_no='';
+function parseInvoiceText(ocrContent, rawText) {
+  const text = (ocrContent || rawText || '').trim();
+  let date = '', time = '', amount = '', origin = '', dest = '', type = '网约车', invoice_no = '';
 
-  try {
-    const data = typeof ocrResult === 'string' ? JSON.parse(ocrResult) : ocrResult;
+  if (!text) return { date, time, amount, origin, dest, type, invoice_no };
 
-    // 检查是否有有效的识别结果
-    if (!data || !data.words_result) {
-      // 如果没有结构化结果，尝试从原始文本解析
-      if (rawText) {
-        return parseInvoiceText(rawText, 'general');
-      }
-      return { date, time, amount, origin, dest, type, invoice_no };
-    }
+  // ── 类型识别 ──
+  if (/滴滴/.test(text)) type = '网约车';
+  else if (/如祺/.test(text)) type = '网约车';
+  else if (/高德/.test(text)) type = '网约车';
+  else if (/T3|曹操|享道|嘀嗒/.test(text)) type = '网约车';
+  else if (/出租汽车|出租|的士/.test(text)) type = '出租车';
+  else if (/公交|地铁/.test(text)) type = '公交/地铁';
 
-    const fields = data.words_result;
-
-    // 判断发票类型
-    const invType = fields.InvoiceType || '';
-    if (/出租/.test(invType)) type = '出租车';
-    else if (/网约|打车|滴滴|如祺|高德/.test(invType)) type = '网约车';
-    else if (/增值|增值税/.test(invType)) type = '增值税发票';
-    else if (rawText && /出租车|的士/.test(rawText)) type = '出租车';
-    else if (rawText && /滴滴|如祺|高德|T3|曹操/.test(rawText)) type = '网约车';
-
-    // 提取字段 - 百度API返回的字段名
-    if (fields.InvoiceDate) date = normalizeDate(fields.InvoiceDate);
-    if (fields.TotalAmount) amount = String(fields.TotalAmount).replace(/[^\d.]/g, '');
-    if (fields.InvoiceNum) invoice_no = fields.InvoiceNum;
-
-    // 备用金额字段
-    if (!amount && fields.Amount) amount = String(fields.Amount).replace(/[^\d.]/g, '');
-    if (!amount && fields.Fare) amount = String(fields.Fare).replace(/[^\d.]/g, '');
-
-    // 如果有原始文本，尝试从中提取更多信息
-    if (rawText) {
-      // 提取起终点
-      const fromMatch = rawText.match(/(?:起点|出发地|上车点|上车|始发)[：:\s]*([^\n，,]{2,20})/);
-      const toMatch = rawText.match(/(?:终点|目的地|下车点|下车|到达)[：:\s]*([^\n，,]{2,20})/);
-      if (fromMatch && !origin) origin = fromMatch[1].trim();
-      if (toMatch && !dest) dest = toMatch[1].trim();
-
-      // 提取时间
-      if (!time) {
-        const timeMatches = rawText.match(/(\d{1,2}):(\d{2})/g) || [];
-        if (timeMatches.length >= 2) {
-          time = timeMatches[0] + '-' + timeMatches[timeMatches.length-1];
-        } else if (timeMatches.length === 1) {
-          time = timeMatches[0];
-        }
-      }
-
-      // 如果没提取到日期，尝试从原始文本提取
-      if (!date) {
-        const dm = rawText.match(/(\d{4})[年\-/](\d{1,2})[月\-/](\d{1,2})/);
-        if (dm) date = normalizeDate(`${dm[1]}-${dm[2]}-${dm[3]}`);
-      }
-
-      // 如果没提取到金额，尝试从原始文本提取
-      if (!amount) {
-        const am = rawText.match(/[¥￥]\s*(\d+\.?\d*)/) || rawText.match(/(?:合计|总计|金额|费用)[：:\s]*([\d.]+)/);
-        if (am) amount = am[1];
-      }
-    }
-
-  } catch(e) {
-    console.error('解析百度发票OCR结果失败:', e);
-    // 失败时使用通用文本解析兜底
-    if (rawText) {
-      return parseInvoiceText(rawText, 'general');
-    }
-  }
-
-  return { date, time, amount, origin, dest, type, invoice_no };
-}
-
-// ═══════════════════════════════════════════
-//  解析发票 OCR 结果（主入口，兼容百度返回）
-// ═══════════════════════════════════════════
-function parseInvoiceText(ocrContent, ocrType, rawText) {
-  if (ocrType === 'financial') {
-    return parseBaiduInvoiceResult(ocrContent, rawText);
-  }
-
-  // 通用OCR文本解析（accurate_basic 返回的文本）
-  let date='', time='', amount='', origin='', dest='', type='网约车', invoice_no='';
-
-  if (!ocrContent) return { date, time, amount, origin, dest, type, invoice_no };
-
-  // 类型识别
-  if (/滴滴/.test(ocrContent)) type='网约车';
-  else if (/如祺/.test(ocrContent)) type='网约车';
-  else if (/高德/.test(ocrContent)) type='网约车';
-  else if (/T3|曹操|享道|嘀嗒/.test(ocrContent)) type='网约车';
-  else if (/出租汽车|出租|的士/.test(ocrContent)) type='出租车';
-  else if (/公交|地铁/.test(ocrContent)) type='公交/地铁';
-
-  // 日期 - 支持多种格式
+  // ── 日期（多种格式） ──
   const datePatterns = [
-    /(\d{4})年(\d{1,2})月(\d{1,2})日/,      // 2026年05月11日
-    /(\d{4})[\-\/](\d{1,2})[\-\/](\d{1,2})/,  // 2026-05-11
-    /(\d{4})(\d{2})(\d{2})/,                  // 20260511
+    /(\d{4})年(\d{1,2})月(\d{1,2})日/,               // 2026年05月11日
+    /(\d{4})[\-\/](\d{1,2})[\-\/](\d{1,2})/,          // 2026-05-11
+    /(\d{4})(\d{2})(\d{2})/,                          // 20260511
   ];
   for (const pat of datePatterns) {
-    const m = ocrContent.match(pat);
-    if (m) {
-      date = `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
-      break;
-    }
+    const m = text.match(pat);
+    if (m) { date = `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`; break; }
   }
 
-  // 时间 - 优先匹配"上车""下车"旁边的时间（支持全角/半角冒号）
-  const pickupMatch = ocrContent.match(/上车[：:\s]*(\d{1,2}:\d{2})/);
-  const dropoffMatch = ocrContent.match(/下车[：:\s]*(\d{1,2}:\d{2})/);
+  // ── 时间 ──
+  // 优先匹配"上车""下车"旁边的时间（支持全角/半角冒号）
+  const pickupMatch = text.match(/上车[：:\s]*(\d{1,2}:\d{2})/);
+  const dropoffMatch = text.match(/下车[：:\s]*(\d{1,2}:\d{2})/);
   if (pickupMatch && dropoffMatch) {
     time = `${pickupMatch[1]} ~ ${dropoffMatch[1]}`;
   } else {
-    //  fallback：提取所有时间
-    const timeMatches = ocrContent.match(/(\d{1,2}):(\d{2})/g) || [];
+    const timeMatches = text.match(/(\d{1,2}):(\d{2})/g) || [];
     if (timeMatches.length >= 2) {
-      time = `${timeMatches[0]} ~ ${timeMatches[timeMatches.length-1]}`;
+      time = `${timeMatches[0]} ~ ${timeMatches[timeMatches.length - 1]}`;
     } else if (timeMatches.length === 1) {
       time = timeMatches[0];
     }
   }
 
-  // 金额 - 优先匹配"金额:"或"¥"后面的数字
-  // 排除单价（前面有"单价"字样）
+  // ── 金额 ──
   const amtPatterns = [
-    /金额[:\s]*[¥￥]?\s*(\d+\.\d{2})/,       // 金额: ¥23.50
-    /[¥￥]\s*(\d+\.\d{2})\s*元/,             // ¥23.50元
-    /(?:合计|总计)[：:\s]*[¥￥]?\s*(\d+\.\d{2})/, // 合计: 23.50
+    /金额[：:\s]*[¥￥]?\s*(\d+\.\d{2})/,                 // 金额: ¥23.50
+    /[¥￥]\s*(\d+\.\d{2})\s*元/,                        // ¥23.50元
+    /(?:合计|总计|实收金额|应收金额)[：:\s]*[¥￥]?\s*(\d+\.\d{2})/,
   ];
   for (const pat of amtPatterns) {
-    const m = ocrContent.match(pat);
+    const m = text.match(pat);
     if (m) { amount = m[1]; break; }
   }
-  // 如果没匹配到，尝试通用金额匹配
   if (!amount) {
-    const amtMatch = ocrContent.match(/[¥￥]\s*(\d+\.?\d*)/);
+    const amtMatch = text.match(/[¥￥]\s*(\d+\.?\d*)/);
     if (amtMatch) amount = amtMatch[1];
   }
 
-  // 发票号码
-  const invNoMatch = ocrContent.match(/发票号码[:\s]*(\d+)/);
+  // ── 发票号码 ──
+  const invNoMatch = text.match(/发票号码[：:\s]*(\d+)/);
   if (invNoMatch) invoice_no = invNoMatch[1].trim();
 
-  // 起终点（出租车发票通常没有起终点，但网约车有）
-  const fromMatch = ocrContent.match(/(?:起点|出发地|上车点|上车)[：:\s]*([^\n，,]{2,15})/);
-  const toMatch = ocrContent.match(/(?:终点|目的地|下车点|下车)[：:\s]*([^\n，,]{2,15})/);
+  // ── 起终点 ──
+  // 只匹配"起点/出发地"和"终点/目的地"，避免"上车/下车"被误识别为地点（出租车发票中这些是时间）
+  const fromMatch = text.match(/(?:起点|出发地)[：:\s]*([^\n，,\d:]{2,15})/);
+  const toMatch = text.match(/(?:终点|目的地)[：:\s]*([^\n，,\d:]{2,15})/);
   if (fromMatch) origin = fromMatch[1].trim();
   if (toMatch) dest = toMatch[1].trim();
 
@@ -919,7 +809,7 @@ async function startAnalysis() {
       );
       try {
         const ocr = await callOCR(f, 'invoice');
-        const parsed = parseInvoiceText(ocr.content || '', ocr.type, ocr.raw || '');
+        const parsed = parseInvoiceText(ocr.content || '', ocr.raw || '');
         invResults.push({
           fileName: f.name,
           date:     parsed.date    || '',
